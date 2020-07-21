@@ -11,7 +11,7 @@ def encode_video(vid_file, vid_name, filename):
     # Define the codec and create VideoWriter object.
     # The output is stored in 'outpy.avi' file.
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    new_vid = cv2.VideoWriter('cyphered' + vid_name, fourcc,
+    new_vid = cv2.VideoWriter('encoded_' + vid_name, fourcc,
                               fps, (frame_width, frame_height))
     letter_generator = reader(filename)
     # Read until video is completed
@@ -77,14 +77,12 @@ def encode_frame(frame, byte_letter, width, height):
 
 
 def reader(filename):
-    with open(filename,'rb') as f:
+    with open(filename) as f:
         while True:
             # read next character
             char = f.read(1)
-            # if not EOF, then at least 1 character was read, and
-            # this is not empty
+            # if not EOF, then at least 1 character was read
             if char:
-                print(char)
                 char = ''.join(map(bin, bytearray(char, encoding='utf-8')))[2:]
                 char = (-len(char) % 8) * '0' + char
                 yield char
@@ -93,7 +91,7 @@ def reader(filename):
 
 
 def decode_video(vid_file, file_name):
-    new_file = open(file_name + ".txt", 'w+')
+    new_file = open("decoded_" + file_name.split("_")[1] + ".txt", 'w+')
     end_of_text = False
     first_frames = True
     width = int(vid_file.get(3) / 8)
@@ -114,9 +112,9 @@ def decode_video(vid_file, file_name):
             # Break the loop
             break
         ret, edit_frame = vid_file.read()
-        word = ""
+        letter = ""
         if ret:
-            # Each frame width is cyphered to a byte -> 1/8 is bit, and so we need to extract the bit.
+            # Each frame width is encoded to a byte -> 1/8 is bit, and so we need to extract the bit.
             # If the noise was on the top half, it is 0, otherwise 1.
             for i in range(8):
                 diff_top = cv2.subtract(original_frame[0:height, int(i*width): int((i+1)*width)], edit_frame[0: height, int(i*width): int((i+1)*width)])
@@ -127,15 +125,15 @@ def decode_video(vid_file, file_name):
                 g = cv2.countNonZero(g_top) - cv2.countNonZero(g_bot)
                 r = cv2.countNonZero(r_top) - cv2.countNonZero(r_bot)
                 if (b + g + r) > 0:
-                    word = word + str(0)
+                    letter = letter + str(0)
+                elif (b + g + r) < 0:
+                    letter = letter + str(1)
                 else:
-                    word = word + str(1)
-            # Haven't found a single byte, we stop iterate to save time.
-            if word == "11111111":
-                end_of_text = True
-                break
+                    # Haven't found a single bit, we stop iterate to save time.
+                    end_of_text = True
+                    break
             else:
-                new_file.write(chr(int(word, 2)))
+                new_file.write(chr(int(letter, 2)))
 
         else:
             break
