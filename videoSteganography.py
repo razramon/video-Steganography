@@ -39,7 +39,7 @@ def encode_video(vid_file, vid_name, filename):
                     pass
                 else:
                     # If success, encode the letter (1 byte) to the frame
-                    encode_frame(frame, letter, frame_width, frame_height)
+                    frame = encode_frame(frame, letter, frame_width, frame_height)
         if ret:
             # Write the frame into the file
             new_vid.write(frame)
@@ -58,6 +58,8 @@ def encode_video(vid_file, vid_name, filename):
 
 
 def encode_frame(frame, byte_letter, width, height):
+    # In order to control how much of the frame will be noised
+    noise = 0.005
     offset_width = 0
     # Iterating over the byte -
     #   width/8      = bit length
@@ -66,7 +68,7 @@ def encode_frame(frame, byte_letter, width, height):
         for j in range(int(offset_width * width / 8), int((offset_width + 1) * width / 8)):
             for i in range(int(int(bit)*height/2), int((int(bit) + 1)*height/2)):
                 # Only 0.005% of each section will be noised, so the frame will not be seen as damaged.
-                if random.random() < 0.005:
+                if random.random() < noise:
                     color = frame[i, j]
                     red = random.randint(1, 5)
                     green = random.randint(1, 5)
