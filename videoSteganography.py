@@ -93,7 +93,7 @@ def reader(filename):
 
 
 def decode_video(vid_file, file_name):
-    new_file = open("decoded_" + file_name.split("_")[1] + ".txt", 'w+')
+    new_file = open("decoded_" + file_name + ".txt", 'w+')
     end_of_text = False
     first_frames = True
     width = int(vid_file.get(3) / 8)
